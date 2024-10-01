@@ -1,0 +1,17 @@
+---
+# handlers file for docker-compose
+
+- name: Deploy Docker infrastructure
+  community.docker.docker_compose_v2:
+    project_name: infrastructure
+    remove_orphans: true
+    project_src: /etc/docker/compose_files/
+    files:
+      - infrastructure.yml
+  tags: docker_compose_up
+
+- name: restart_traefik
+  community.docker.docker_container:
+    name: traefik
+    state: started
+    restart: true

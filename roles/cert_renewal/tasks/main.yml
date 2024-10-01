@@ -1,0 +1,7 @@
+---
+- name: Setup cron job for certificate renewal
+  cron:
+    name: "Renew SSL certificate"
+    job: "lego --email '{{ infrastructure.lets_encrypt_email }}' --domains '*.{{ infrastructure.sub_domain }}' --dns duckdns --path /etc/lego renew --days 60"
+    special_time: daily
+    user: root

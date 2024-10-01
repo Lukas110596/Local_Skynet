@@ -1,0 +1,6 @@
+- hosts: all
+  roles:
+    - role: docker
+    - role: services
+    #- role: cert_renewal
+    #- role: cert_generation

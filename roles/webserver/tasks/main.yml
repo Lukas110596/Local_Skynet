@@ -1,0 +1,21 @@
+---
+# tasks file for webserver
+- name: Ensure Nginx directories and files are there
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+    mode: "{{ item.mode }}"
+  loop:
+    # Andere Verzeichnisse und Dateien...
+    - {
+        path: "{{ docker_config_path }}/nginx/html",
+        state: directory,
+        mode: "0755",
+      }
+
+- name: Kopiere index.html in das nginx/html Verzeichnis
+  ansible.builtin.copy:
+    src: index.html #ansible takes file out of files direcorty when no absolute path
+    dest: "{{ docker_config_path }}/nginx/html/index.html"
+    mode: "0644"
+  notify: restart_nginx #triggers restart of service in handlers

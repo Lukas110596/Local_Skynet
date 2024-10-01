@@ -1,0 +1,18 @@
+---
+# vars file for pihole
+custom_dns_records:
+  - "192.168.0.8 home-server.local.{{ infrastructure.sub_domain }}"
+
+custom_cname_records:
+  - alias: "traefik-dashboard.local.{{ infrastructure.sub_domain }}"
+    target: "home-server.local.{{ infrastructure.sub_domain }}"
+  - alias: "nginx.local.{{ infrastructure.sub_domain }}"
+    target: "home-server.local.{{ infrastructure.sub_domain }}"
+  - alias: "pihole.local.{{ infrastructure.sub_domain }}"
+    target: "home-server.local.{{ infrastructure.sub_domain }}"
+  - alias: "homepage.local.{{ infrastructure.sub_domain }}"
+    target: "home-server.local.{{ infrastructure.sub_domain }}"
+  - alias: "portainer.local.{{ infrastructure.sub_domain }}"
+    target: "home-server.local.{{ infrastructure.sub_domain }}"
+  - alias: "gotify.local.{{ infrastructure.sub_domain }}"
+    target: "home-server.local.{{ infrastructure.sub_domain }}"

@@ -1,0 +1,40 @@
+---
+# tasks file for pihole
+
+- name: Ensure pihole directories and files
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - {
+        path: "{{ docker_config_path }}/pihole/etc-dnsmasq.d",
+        state: directory,
+        mode: "0755",
+      }
+    - {
+        path: "{{ docker_config_path }}/pihole/etc-pihole",
+        state: directory,
+        mode: "0755",
+      }
+
+- name: Copy pihole config files
+  ansible.builtin.copy:
+    src: lighttpd.conf #ansible takes file out of files direcorty when no absolute path
+    dest: "{{ docker_config_path }}/pihole/lighttpd.conf"
+    mode: "0644"
+    notify: restart_pihole
+
+- name: Create custom.list for DNS records
+  ansible.builtin.template:
+    src: "custom.list.j2"
+    dest: "{{ docker_config_path }}/pihole/etc-pihole/custom.list"
+    mode: "0644"
+  notify: restart_pihole
+
+- name: Create 05-pihole-custom-cname.conf for CNAME records
+  ansible.builtin.template:
+    src: "05-pihole-custom-cname.conf.j2"
+    dest: "{{ docker_config_path }}/pihole/etc-dnsmasq.d/05-pihole-custom-cname.conf"
+    mode: "0644"
+  notify: restart_pihole

@@ -1,0 +1,33 @@
+---
+# tasks file for crowdsec
+- name: Ensure Crowdsec directories and files are there
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+    mode: "{{ item.mode }}"
+  loop:
+    # Andere Verzeichnisse und Dateien...
+    - {
+        path: "{{ docker_config_path }}/crowdsec",
+        state: directory,
+        mode: "0755",
+      }
+    - {
+        path: "{{ docker_config_path }}/crowdsec/db",
+        state: directory,
+        mode: "0755",
+      }
+    - {
+        path: "{{ docker_config_path }}/crowdsec/config",
+        state: directory,
+        mode: "0755",
+      }
+
+- name: Copy Crowdsec templates
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - src: "acquis.yaml.j2"
+      dest: "{{ docker_config_path }}/crowdsec/acquis.yaml"
+  notify: restart_crowdsec

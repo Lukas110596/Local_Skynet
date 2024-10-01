@@ -1,0 +1,10 @@
+---
+# vars file for docker-compose
+docker_deps:
+  - "ca-certificates"
+  - "curl"
+  - "python3-pip"
+
+docker_packages:
+  - "docker-ce"
+  - "docker-compose"

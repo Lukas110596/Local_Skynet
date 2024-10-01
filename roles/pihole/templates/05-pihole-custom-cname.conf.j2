@@ -1,0 +1,3 @@
+{% for cname in custom_cname_records %}
+cname={{ cname.alias }},{{ cname.target }}
+{% endfor %}

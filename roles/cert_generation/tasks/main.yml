@@ -1,0 +1,36 @@
+- name: Set environment variable for DuckDNS token
+  lineinfile:
+    path: /etc/environment
+    line: "DUCKDNS_TOKEN={{ infrastructure.duck_dns_token }}"
+    state: present
+  tags: set_env_duckdns_var
+
+- name: Update TXT record for DuckDNS
+  uri:
+    url: "https://www.duckdns.org/update?domains={{ infrastructure.sub_domain_without_toplevel }}&token={{ infrastructure.duck_dns_token }}&txt={{ lookup('env','LEGO_CHALLENGE') }}"
+    method: GET
+    return_content: yes
+    validate_certs: yes
+  register: response
+  tags: update_txt_record
+
+- name: Check response from DuckDNS
+  fail:
+    msg: "Failed to update TXT record on DuckDNS. Response was: {{ response.content }}"
+  when: response.content is not search("OK")
+
+- name: Generate certificate with lego
+  command: >
+    lego --email "{{ infrastructure.lets_encrypt_email }}"
+         --domains "*.{{ infrastructure.sub_domain }}"
+         --dns duckdns
+         --dns.resolvers "8.8.8.8:53"
+         --path /etc/lego
+         --accept-tos
+         --dns-timeout 120
+         run
+  environment:
+    DUCKDNS_TOKEN: "{{ infrastructure.duck_dns_token }}"
+  become: true
+  tags:
+    - cert_generation

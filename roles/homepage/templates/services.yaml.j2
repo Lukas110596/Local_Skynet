@@ -1,0 +1,39 @@
+# For configuration options and examples, please see:
+# https://gethomepage.dev/latest/configs/services
+
+- Infrastructure:
+    - Traefik-Testsuper:
+        icon: traefik.svg
+        href: "https://traefik-dashboard.local.{{ infrastructure.sub_domain }}/dashboard/#/"
+        description: Reverse proxy and load balancer.
+        siteMonitor: "https://traefik-dashboard.local.{{ infrastructure.sub_domain }}"
+        container: "traefik"
+        server: localdocker
+        widget:
+            type: traefik
+            url: "https://traefik-dashboard.local.{{ infrastructure.sub_domain }}"
+
+    - Wireguard Server:
+        description: Wireguard Server
+        icon: si-wireguard-#88171A
+        server: localdocker
+        container: wireguard
+
+    - Portainer:
+            href: https://{{ infrastructure.server_ip }}:9444
+            siteMonitor: https://{{ infrastructure.server_ip }}:9444
+            description: Container Managment GUI
+            icon: si-portainer-#13BEF9
+            server: localdocker
+            widget:
+                type: portainer
+                url: https://{{ infrastructure.server_ip }}:9444
+                env: 2
+                key: "{{ infrastructure.portainer_key}}"
+
+    - Nginx Website:
+        href: http://ngixn.{{infrastructure.sub_domain}}/
+        description: nginx Webserver
+        icon: si-nginx-#009639
+        server: localdocker
+        container: webserver

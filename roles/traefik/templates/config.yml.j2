@@ -1,0 +1,69 @@
+---
+http:
+  # region routers
+  routers:
+    pihole:
+      entryPoints:
+        - "https"
+      rule: "Host(`pihole.local.local-skynet.duckdns.org`) && PathPrefix(`/admin`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - ip-whitelist
+        - crowdsec-bouncer
+      tls:
+        certResolver: "duckdns"
+      service: pihole
+
+
+  # endregion
+  # region services
+  services:
+    pihole:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.0.8:8082"
+        passHostHeader: true
+
+  # endregion
+  middlewares:
+    https-redirectscheme:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+    default-headers:
+      headers:
+        frameDeny: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 15552000
+        customFrameOptionsValue: SAMEORIGIN
+        customRequestHeaders:
+          X-Forwarded-Proto: https
+          
+    ip-whitelist:
+      ipAllowList:
+        sourceRange:
+          - "192.168.0.0/16"
+    
+    crowdsec-bouncer:
+      forwardauth:
+        address: http://bouncer-traefik:8080/api/v1/forwardAuth
+        trustForwardHeader: true
+
+    default-whitelist:
+      ipAllowList:
+        sourceRange:
+          - "10.0.0.0/8"
+          - "192.168.0.0/16"
+          - "172.16.0.0/12"
+
+    secured:
+      chain:
+        middlewares:
+          - default-whitelist
+          - default-headers

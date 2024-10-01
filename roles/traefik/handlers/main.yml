@@ -1,0 +1,7 @@
+---
+# handlers file for traefik
+- name: restart_traefik
+  community.docker.docker_container:
+    name: traefik
+    state: started
+    restart: true

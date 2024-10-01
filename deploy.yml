@@ -1,0 +1,10 @@
+- hosts: all
+  roles:
+    #- role: services
+    - role: docker-compose
+    - role: webserver
+    - role: homepage
+    - role: traefik
+    - role: pihole
+    - role: crowdsec
+    - role: gotify

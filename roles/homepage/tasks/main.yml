@@ -1,0 +1,30 @@
+---
+# tasks file for homepage
+- name: Ensure Homepage directories and files are there
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+    mode: "{{ item.mode }}"
+  loop:
+    # Andere Verzeichnisse und Dateien...
+    - {
+        path: "{{ docker_config_path }}/homepage/config",
+        state: directory,
+        mode: "0755",
+      }
+
+- name: Copy Homepage templates
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    # Homepage
+    - src: "settings.yaml.j2"
+      dest: "{{ docker_config_path }}/homepage/config/settings.yaml"
+    - src: "services.yaml.j2"
+      dest: "{{ docker_config_path }}/homepage/config/services.yaml"
+    - src: "docker.yaml.j2"
+      dest: "{{ docker_config_path }}/homepage/config/docker.yaml"
+    - src: "widgets.yaml.j2"
+      dest: "{{ docker_config_path }}/homepage/config/widgets.yaml"
+  notify: restart_homepage

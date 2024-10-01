@@ -1,0 +1,1 @@
+{{infrastructure.duck_dns_token}}

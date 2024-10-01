@@ -1,0 +1,41 @@
+---
+# tasks file for traefik
+- name: Ensure Traefik directories and files are there
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - {
+        path: "{{ docker_config_path }}/traefik",
+        state: directory,
+        mode: "0755",
+      }
+    - {
+        path: "{{ docker_config_path }}/traefik/data",
+        state: directory,
+        mode: "0755",
+      }
+    - {
+        path: "{{ docker_config_path }}/traefik/data/acme.json",
+        state: touch,
+        mode: "0600",
+        content: "{}",
+      }
+    - {
+        path: "{{ docker_config_path }}/traefik/logs",
+        state: directory,
+        mode: "0755",
+      }
+
+- name: Copy Traefik templates
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    # Homepage
+    - src: "traefik.yml.j2"
+      dest: "{{ docker_config_path }}/traefik/data/traefik.yml"
+    - src: "config.yml.j2"
+      dest: "{{ docker_config_path }}/traefik/data/config.yml"
+  notify: restart_traefik

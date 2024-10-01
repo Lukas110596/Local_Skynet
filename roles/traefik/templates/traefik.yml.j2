@@ -1,0 +1,75 @@
+---
+api:
+  dashboard: true
+  debug: true
+
+entryPoints:
+  http:
+    address: ":80"
+    http:
+      middlewares:
+        - ip-whitelist@file
+        - crowdsec-bouncer@file
+      redirections:
+        entryPoint:
+          to: https
+          scheme: https
+  https:
+    address: ":443"
+    http:
+      middlewares:
+        - ip-whitelist@file
+        - crowdsec-bouncer@file
+
+  http-external:
+    address: ":81"
+    http:
+      middlewares:
+        - crowdsec-bouncer@file
+      redirections:
+        entrypoint:
+          to: https-external
+          scheme: https
+  https-external:
+    address: ":444"
+    http:
+      middlewares:
+        - crowdsec-bouncer@file
+
+# when using selfsigned certificates behind treafik
+# like proxmox otherwise you can turn it off
+serversTransport:
+  insecureSkipVerify: true
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+  file:
+    filename: /config.yml
+    watch: true
+
+certificatesResolvers:
+  duckdns:
+    acme:
+      email: "letsencrypt@fthcapital.com"
+      storage: "acme.json"
+      # test with staging and when that works take produciton otherwise
+      # when to much request they block your for couple days
+      # prod (default)
+      # caServer: https://acme-v02.api.letsencrypt.org/directory
+      # staging
+      caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+      dnsChallenge:
+        provider: duckdns
+        delayBeforeCheck: 60
+        resolvers:
+          - "1.1.1.1:53"
+          - "1.0.0.1:53"
+        disablePropagationCheck: true
+
+log:
+  level: "INFO"
+  filePath: "/var/log/traefik/traefik.log"
+accessLog:
+  filePath: "/var/log/traefik/access.log"

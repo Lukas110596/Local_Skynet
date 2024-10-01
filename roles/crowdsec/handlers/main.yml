@@ -1,0 +1,7 @@
+---
+# handlers file for crowdsec
+- name: restart_crowdsec
+  community.docker.docker_container:
+    name: crowdsec
+    state: started
+    restart: true

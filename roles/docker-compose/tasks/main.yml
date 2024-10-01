@@ -1,0 +1,132 @@
+---
+# tasks file for docker-compose
+# Define variables based on architecture
+- name: Set amd64 arch
+  set_fact:
+    repo_arch: amd64
+  when: ansible_architecture == "x86_64"
+
+- name: Set arm64 arch
+  set_fact:
+    repo_arch: "{{ ansible_architecture }}"
+  when: ansible_architecture == "arm64"
+
+- name: Include OS-specific variables
+  include_vars: "{{ ansible_facts['distribution'] }}.yml"
+
+- name: Install required system packages
+  package:
+    state: present
+    name: "{{ docker_deps }}"
+
+- name: Install Docker (Ubuntu)
+  when: ansible_facts['distribution'] == 'Ubuntu'
+  block:
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: "deb [arch={{ repo_arch }}] https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }} {{ ansible_lsb['codename'] }} stable"
+        state: present
+  ignore_errors: true
+#TODO add docker gpg apt key wirft oft fehler nameresolutio anschauen
+
+- name: Attempt docker installation
+  apt:
+    update_cache: yes
+    name: "{{ docker_packages }}"
+    state: present
+  ignore_errors: true
+
+- name: Ensure group docker exists
+  group:
+    name: docker
+    state: present
+  ignore_errors: true
+
+- name: Add user "{{ username }}" to group docker
+  user:
+    name: "{{ username }}"
+    groups:
+      - docker
+    append: yes
+
+- name: Make sure Docker is running and enabled
+  systemd:
+    name: docker
+    daemon_reload: yes
+    state: started
+    enabled: yes
+
+- name: Install unzip (Debian/Ubuntu)
+  apt:
+    name: unzip
+    state: present
+  when: ansible_os_family == "Debian"
+
+# Get current user's UID and GID
+- name: Get current user's UID
+  ansible.builtin.command: "id -u"
+  register: user_uid
+  become: true
+  become_user: mbytebender
+
+- name: Get current user's GID
+  ansible.builtin.command: "id -g"
+  register: user_gid
+  become: true
+  become_user: mbytebender
+
+# Debug UID and GID to ensure they are correct
+- name: Debug UID
+  debug:
+    var: user_uid.stdout
+
+- name: Debug GID
+  debug:
+    var: user_gid.stdout
+
+- name: Ensure infrastructure directories and files
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - {
+        path: "{{ docker_config_path }}/compose_files",
+        state: directory,
+        mode: "0755",
+      }
+  notify:
+    - Deploy Docker infrastructure
+
+- name: Kopiere duckdns_api_token.txt auf Remote-Host
+  ansible.builtin.copy:
+    content: "{{ infrastructure.duck_dns_token }}"
+    dest: "{{ docker_config_path }}/traefik/duckdns_api_token.txt"
+    mode: "0600"
+  notify:
+    - Deploy Docker infrastructure
+
+- name: Copy infrastructure templates
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - src: infrastructure.yml.j2
+      dest: "{{ docker_config_path }}/compose_files/infrastructure.yml"
+  notify:
+    - Deploy Docker infrastructure
+    - restart_traefik
+
+# This block comment out for deploament on another machine/network
+- name: Copy .env file
+  ansible.builtin.copy:
+    src: .env #ansible takes file out of files direcorty when no absolute path
+    dest: "{{ docker_config_path }}/compose_files/.env"
+    mode: "0644"
+  notify:
+    - Deploy Docker infrastructure

@@ -1,0 +1,12 @@
+version: "3"
+
+tasks:
+  test:
+    cmds:
+      - ansible all -m ping
+
+    setup:
+      - ansible-playbook setup.yml
+
+    deploy:
+      - ansible-playbook deploy.yml
